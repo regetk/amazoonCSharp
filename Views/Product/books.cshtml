@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta content="text/html" charset="utf-8" />
+<title>Raamatud</title>
+@model IEnumerable<Amazoon.Models.FoundItem>
+
+   <script type="text/javascript" src="@Url.Content("/Scripts/jquery-2.0.3.min.js")"></script>
+   <script type="text/javascript" src="@Url.Content("/Scripts/prod.js")"></script>
+   <script type="text/javascript">
+       
+   </script>
+   
+</head>
+<body>
+<h2>Raamatute otsimine</h2>
+<input type="hidden" id="choosenCurr" value="@ViewBag.scurr" />
+<form method="GET">
+    <input type="text" name="fWord" value="@ViewBag.fword" />
+    <select id="selCurr" name="sCurr"></select>
+    <input type="submit" value="Find" />
+</form>
+
+@{        
+   var grid = new WebGrid(source: Model,
+                defaultSort: "Price",
+                rowsPerPage:3);
+}
+
+
+<div id="grid">
+    @grid.GetHtml(
+        tableStyle: "grid",
+        headerStyle: "head",
+        alternatingRowStyle: "alt",
+        columns: grid.Columns(
+            grid.Column("ASIN"),
+            grid.Column("Title"),
+            grid.Column("Price",format:@<text>@item.price</text>)
+        )
+        
+        
+    )
+</div>
+
+<table>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.asin)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.title)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.price)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.asin)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.title)
+        </td>
+        <td>
+            <input type="hidden" class="prices" value="@Html.DisplayFor(modelItem => item.price)" /> 
+            <span></span>
+    
+            
+        </td>
+   </tr>
+}
+
+</table>
+<ul >
+@for (var a = 1; a < ViewBag.pcount; a++)
+{
+   
+    <li style="display: inline;"><a class="pageLink" href="?page=@a&fWord=@ViewBag.fword&sCurr=@ViewBag.scurr">@a</a></li>
+}
+</ul>
+</body>
+
+</html>

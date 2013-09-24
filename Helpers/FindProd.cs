@@ -68,9 +68,16 @@ public class FindProd
        return requestUrl;
     }
 
+    public void computeNeededPages(long firstWpElem, long elemsInWp, out int fWsPage, out int lWsPage) {
+        fWsPage = 0;
+        lWsPage = 0;
+
+    
+    }
+
     public List<FoundItem> process(int sp, int ep,out string totalPages) {
         List<FoundItem> found = new List<FoundItem>();
-        string sUrl = makeSignedUrl("1");
+        string sUrl = makeSignedUrl("6");
         XDocument xdoc=XDocument.Load(sUrl);
         //namespace !!!
         string nameSp = @"{http://webservices.amazon.com/AWSECommerceService/2011-08-01}";
