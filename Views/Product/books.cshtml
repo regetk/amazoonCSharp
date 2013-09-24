@@ -21,38 +21,17 @@
     <input type="submit" value="Find" />
 </form>
 
-@{        
-   var grid = new WebGrid(source: Model,
-                defaultSort: "Price",
-                rowsPerPage:3);
-}
-
-
-<div id="grid">
-    @grid.GetHtml(
-        tableStyle: "grid",
-        headerStyle: "head",
-        alternatingRowStyle: "alt",
-        columns: grid.Columns(
-            grid.Column("ASIN"),
-            grid.Column("Title"),
-            grid.Column("Price",format:@<text>@item.price</text>)
-        )
-        
-        
-    )
-</div>
 
 <table>
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.asin)
+            ASIN
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.title)
+            Pealkiri
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.price)
+           Hind
         </th>
         <th></th>
     </tr>

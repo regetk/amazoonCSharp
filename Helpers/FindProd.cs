@@ -86,7 +86,6 @@ public class FindProd
 
     private void computeNeededPages(int wpPagenr, int elemsInWp, out int fWsPage, out int lWsPage, out int firstElementInWsFirstPage, out int lastElementInWsLastPage)
     {
-        
         int wpFirstElemNr = (wpPagenr - 1) * elemsInWp; //first element index need to query (base 0)
         int wpLastElemNr = wpFirstElemNr + elemsInWp - 1; //last element index need to query (base 0)
         //adapt when in last page
@@ -98,7 +97,9 @@ public class FindProd
       }
 
     public List<FoundItem> process() {
+        
         List<FoundItem> found = new List<FoundItem>();
+        if (totalResults == 0) return found;
         //namespace !!!
         string nameSp = @"{http://webservices.amazon.com/AWSECommerceService/2011-08-01}";
         int fWsPage=0;
@@ -128,6 +129,16 @@ public class FindProd
 
             }
         } //for query each page
+        //in this point we have n*WsPages list
+        //how many pages
+        int pCount = lWsPage - fWsPage;
+        //jump  to last used element
+        int pIdx = (pCount * wsPageSize)+leInLWsPage+1;
+        //cut the tail
+        found.RemoveRange(pIdx, found.Count - pIdx);
+        //we cut it from beginning to first needed idx
+        found.RemoveRange(0, feInFWsPage);
+        
 
         return found;
     }

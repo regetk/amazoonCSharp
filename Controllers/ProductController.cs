@@ -21,9 +21,9 @@ namespace Amazoon.Controllers
             ViewBag.fword = fWord;
             ViewBag.scurr = sCurr;
             FindProd fp = new FindProd(fWord, page);
-            string stp;
-            List<FoundItem> fitems= fp.process(1,1,out stp);
-            ViewBag.pcount = Convert.ToInt32(stp);
+               
+            List<FoundItem> fitems= fp.process();
+            ViewBag.pcount = ((fp.getTotalResults())/13)+1;
             return View(fitems);
         }
 
@@ -36,19 +36,7 @@ namespace Amazoon.Controllers
           return xe.Value;
         }
 
-        public JsonResult lazyPaging(string page) {
-            FindProd fp = new FindProd("rocket", page);
-            string stp;
-            List<FoundItem> fitems = fp.process(1, 1, out stp);
-            WebGrid grid = new WebGrid(fitems);
-            IHtmlString htmlStr = grid.GetHtml(tableStyle: "webGrid",
-            headerStyle: "header", htmlAttributes: new { id = "fitems" });
-            return Json(new { items=htmlStr.ToHtmlString(), pCount=stp
-                            },JsonRequestBehavior.AllowGet
-                );
-
-
-        }
+       
 
        
 
