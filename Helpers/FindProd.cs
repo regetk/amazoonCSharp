@@ -2,6 +2,7 @@
 using System.IO;
 using Amazoon.Models;
 using System.Xml.Linq;
+using System;
 
 public class FindProd
 {
@@ -9,9 +10,13 @@ public class FindProd
     private static string AWS_SECRET;
     private static string fName = @"C:\Users\Reget.Kalamees\Documents\NetBeansProjects\Amazoon2\konf.properties";
     private static string destination = "ecs.amazonaws.de";
+    private static int wsPageSize = 10;  //web service page size
 
     private string fWord;
     private int wpNr;
+    private int totalResults=0;
+
+    public int getTotalResults() { return this.totalResults; }
 
     private static Dictionary<string,string> ReadDictionaryFile(string fileName)
     {
@@ -48,8 +53,19 @@ public class FindProd
         if (AWS_KEY == null) readConf();
         this.fWord = fWord;
         this.wpNr = int.Parse(webPageNr);
+        queryTotalResults();
     }
 
+    private int queryTotalResults() {
+        string sUrl = makeSignedUrl("1");
+        XDocument xdoc = XDocument.Load(sUrl);
+        //namespace !!!
+        string nameSp = @"{http://webservices.amazon.com/AWSECommerceService/2011-08-01}";
+        IEnumerable<XElement> totRes = xdoc.Root.Descendants(nameSp + "TotalResults");
+         //only one TotalResults element
+        foreach (XElement xe in totRes) this.totalResults = Convert.ToInt32(xe.Value);
+        return this.totalResults;
+    }
     
 
     private string makeSignedUrl(string wsPage){
@@ -68,40 +84,50 @@ public class FindProd
        return requestUrl;
     }
 
-    public void computeNeededPages(long firstWpElem, long elemsInWp, out int fWsPage, out int lWsPage) {
-        fWsPage = 0;
-        lWsPage = 0;
+    private void computeNeededPages(int wpPagenr, int elemsInWp, out int fWsPage, out int lWsPage, out int firstElementInWsFirstPage, out int lastElementInWsLastPage)
+    {
+        
+        int wpFirstElemNr = (wpPagenr - 1) * elemsInWp; //first element index need to query (base 0)
+        int wpLastElemNr = wpFirstElemNr + elemsInWp - 1; //last element index need to query (base 0)
+        //adapt when in last page
+        if (wpLastElemNr >= totalResults) wpLastElemNr = totalResults - 1;
+        fWsPage = (wpFirstElemNr / wsPageSize) + 1; //first needed WS page nr (base 1)
+        lWsPage = (wpLastElemNr / wsPageSize) + 1; //last needed WS page (base 1)
+        firstElementInWsFirstPage = wpFirstElemNr % wsPageSize; //base 0
+        lastElementInWsLastPage = wpLastElemNr % wsPageSize; //base 0
+      }
 
-    
-    }
-
-    public List<FoundItem> process(int sp, int ep,out string totalPages) {
+    public List<FoundItem> process() {
         List<FoundItem> found = new List<FoundItem>();
-        string sUrl = makeSignedUrl("6");
-        XDocument xdoc=XDocument.Load(sUrl);
         //namespace !!!
         string nameSp = @"{http://webservices.amazon.com/AWSECommerceService/2011-08-01}";
-        IEnumerable<XElement> totPages = xdoc.Root.Descendants(nameSp+"TotalPages");
-        totalPages = "0";
-        
-        //only one TotalPages element
-       foreach(XElement xe in totPages) totalPages =xe.Value;
-        
-        foreach (XElement xe in xdoc.Root.Descendants(nameSp + "Item"))
+        int fWsPage=0;
+        int lWsPage=0;
+        int feInFWsPage=0;
+        int leInLWsPage=0;
+
+        computeNeededPages(this.wpNr,13, out fWsPage, out lWsPage, out feInFWsPage, out leInLWsPage);
+        for (int a = fWsPage; a <= lWsPage; a++)
         {
-            FoundItem fi = new FoundItem();
-            fi.asin = xe.Element(nameSp+"ASIN").Value;
-            fi.title = xe.Element(nameSp+"ItemAttributes").Element(nameSp+"Title").Value;
-            IEnumerable<XElement> xePrices = xe.Descendants(nameSp+"Amount");
-            if (xePrices != null) {
-                foreach (XElement xeAmount in xePrices) fi.price = xeAmount.Value;
+            string sUrl = makeSignedUrl(a.ToString());
+            XDocument xdoc = XDocument.Load(sUrl);
+            //TODO - start and end idx
+            foreach (XElement xe in xdoc.Root.Descendants(nameSp + "Item"))
+            {
+                FoundItem fi = new FoundItem();
+                fi.asin = xe.Element(nameSp + "ASIN").Value;
+                fi.title = xe.Element(nameSp + "ItemAttributes").Element(nameSp + "Title").Value;
+                IEnumerable<XElement> xePrices = xe.Descendants(nameSp + "Amount");
+                if (xePrices != null)
+                {
+                    foreach (XElement xeAmount in xePrices) fi.price = xeAmount.Value;
+                }
+                found.Add(fi);
+
+
+
             }
-            found.Add(fi);
-
-
-        
-        }
-
+        } //for query each page
 
         return found;
     }

@@ -1,6 +1,5 @@
 ﻿$(document).ready(beginning);
 
-//function temp() {alert("Hi");}
 
 function beginning() {
     var toCurr = $("#choosenCurr").val();
